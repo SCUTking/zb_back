@@ -73,18 +73,18 @@ public class GlobelFilter implements GlobalFilter {
         URI uri = request.getURI();
         String uriString=uri.toString();
         List<String> list=new ArrayList<>();
-        list.add("http://175.178.85.36:10010/user/login");
-        list.add("http://175.178.85.36:10010/user/register");
         list.add("http://localhost:10010/user/login");
         list.add("http://localhost:10010/user/register");
-        list.add("http://175.178.85.36:8083/liveRoom/save");
+        list.add("http://localhost:10010/user/login");
+        list.add("http://localhost:10010/user/register");
+        list.add("http://localhost:8083/liveRoom/save");
         list.add("http://localhost:8083/liveRoom/save");
         for (String s:list){
             if(uriString.equals(s)){
                 return true;
             }
             if (uriString.substring(0,uriString.lastIndexOf('/')).equals("http://localhost:10010/storage/image")
-            ||uriString.substring(0,uriString.lastIndexOf('/')).equals("http://175.178.85.36:10010/storage/image")){
+            ||uriString.substring(0,uriString.lastIndexOf('/')).equals("http://localhost:10010/storage/image")){
 
                 return true;
             }

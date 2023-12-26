@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.websocket.server.PathParam;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -171,6 +173,10 @@ public class StudyRoomController {
         log.info(studyRoomId);
         //直接删除之
         studyRoomService.removeById(Long.parseLong(studyRoomId));
+        //删除自习室中的成员信息
+        LambdaQueryWrapper<StudyRoomMember>wrapper=new LambdaQueryWrapper<>();
+        wrapper.eq(StudyRoomMember::getStudyRoomId,studyRoomId);
+        studyRoomMemberService.remove(wrapper);
         //定义队列
         String queue="deleteStudyRoom";
         rabbitTemplate.convertAndSend(queue,studyRoomId);
@@ -228,6 +234,9 @@ public class StudyRoomController {
             return R.error("该自习室不存在");
         }
         //如果一切正常，去创建一个自习室的计划
+        //获取当前时间
+        LocalDateTime now = LocalDateTime.now();
+        studyRoomPlan.setCreatePlanTime(now);
         studyRoomPlanService.save(studyRoomPlan);
         return R.success("自习室计划添加成功");
     }
@@ -239,12 +248,43 @@ public class StudyRoomController {
      * @return
      */
     @GetMapping("/getStudyRoomPlan")
-    public R<List<StudyRoomPlan>> getStudyRoomPlan(String studyRoomId){
+    public R<List<StudyRoomPlan>> getStudyRoomPlan(String studyRoomId,String userId){
+        //获取当前的年月日
+        LocalDateTime time=LocalDateTime.now();
+        String format = time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         LambdaQueryWrapper<StudyRoomPlan>wrapper=new LambdaQueryWrapper<>();
         wrapper.eq(studyRoomId!=null,StudyRoomPlan::getStudyRoomId,Long.parseLong(studyRoomId));
+        wrapper.eq(userId!=null,StudyRoomPlan::getUserId,userId);
         //查询
         List<StudyRoomPlan> list = studyRoomPlanService.list(wrapper);
+        //重新封装数据
+        List<StudyRoomPlan> resultList=new ArrayList<>();
+        for(int i=0;i<list.size();i++){
+            //获取年月日
+            StudyRoomPlan tem= list.get(i);
+            String format1 = tem.getCreatePlanTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            if(format.equals(format1)){
+                resultList.add(tem);
+            }
+        }
         //返回数据
+        return R.success(resultList);
+    }
+
+    /**
+     * 获取该用户创建的所有计划
+     * @param userId
+     * @return
+     */
+    @GetMapping("/getAllPlanMakeByUser")
+    public R<List<StudyRoomPlan>> getAllPlanMakeByUser(String userId){
+        //构造查询条件
+        LambdaQueryWrapper<StudyRoomPlan> wrapper=new LambdaQueryWrapper<>();
+        wrapper.eq(userId!=null,StudyRoomPlan::getUserId,Long.parseLong(userId));
+        //按照创建时间降序排序
+        wrapper.orderByDesc(StudyRoomPlan::getCreatePlanTime);
+        //查询
+        List<StudyRoomPlan> list = studyRoomPlanService.list(wrapper);
         return R.success(list);
     }
 
@@ -355,6 +395,24 @@ public class StudyRoomController {
 
         return R.success("退出该自习室成功");
     }
+
+    /**
+     * 离开自习室，更新用户状态为离线
+     * @param member
+     */
+    @PutMapping("/exitStudyRoom")
+    public void exitStudyRoom(@RequestBody StudyRoomMember member){
+        //设置状态为离线
+        member.setIsOnline(0);
+        //构造查询条件
+        LambdaQueryWrapper<StudyRoomMember> wrapper=new LambdaQueryWrapper<>();
+        wrapper.eq(StudyRoomMember::getStudyRoomId,member.getStudyRoomId());
+        wrapper.eq(StudyRoomMember::getUserId,member.getUserId());
+        studyRoomMemberService.update(member,wrapper);
+        log.info("用户"+member.getUserId()+"已离线");
+    }
+
+
 
 
     /**
