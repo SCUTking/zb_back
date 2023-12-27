@@ -5,7 +5,7 @@ spring:
     name: gateway #网关服务的名称
   cloud:
     nacos:
-      server-addr: localhost:8848 #配置nacos服务地址
+      server-addr: 139.159.136.22:8848 #配置nacos服务地址
     gateway:
       routes: #配置路由
         - id: user-service #路由的唯一id
@@ -46,7 +46,7 @@ spring:
 
   datasource: #配置数据库
     druid:
-      url: jdbc:mysql://localhost:3306/zhibo
+      url: jdbc:mysql://139.159.136.22:3306/zhibo
       driver-class-name: com.mysql.cj.jdbc.Driver
       username: root
       password: 852456jkl

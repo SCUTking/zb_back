@@ -5,14 +5,14 @@ spring:
     name: interactionservice
   cloud:
     nacos:
-      server-addr: localhost:8848 #服务发现地址
+      server-addr: 139.159.136.22:8848 #服务发现地址
 #      discovery:
 #        ip: 121.37.24.27
 #        port: 8086
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/zhibo
+      url: jdbc:mysql://139.159.136.22:3306/zhibo
       username: root
       password: 852456jkl
   redis:
