@@ -3,8 +3,10 @@ package liveroomservice.Controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import liveroomservice.Common.R;
 import liveroomservice.Domain.Room;
+import liveroomservice.Domain.RoomUser;
 import liveroomservice.Dto.RoomResult;
 import liveroomservice.Service.RoomService;
+import liveroomservice.Service.RoomUserService;
 import liveroomservice.Utill.StringUtill;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 //控制层bean，restful风格
@@ -23,6 +26,10 @@ public class LiveRoomController {
 
     @Autowired
     private RoomService roomService;
+
+    @Autowired
+    private RoomUserService roomUserService;
+
     @GetMapping("/hello")
     public R<String> Hello(){
         return R.success("hello");
@@ -41,10 +48,10 @@ public class LiveRoomController {
         //查看该用户是否创建过直播间
         LambdaQueryWrapper<Room> wrapper=new LambdaQueryWrapper<>();
         wrapper.eq(userId!=null,Room::getMasterId,userId);
-        Room one = roomService.getOne(wrapper);
-        if(one!=null){
-            return R.error("该用户已经创建过直播间，且该直播未结束");
-        }
+//        Room one = roomService.getOne(wrapper);
+//        if(one!=null){
+//            return R.error("该用户已经创建过直播间，且该直播未结束");
+//        }
         room.setMasterId(Long.parseLong(userId));
         //设置默认图片
         if(room.getRoomImage()==null||room.getRoomImage().equals("")){
@@ -56,7 +63,62 @@ public class LiveRoomController {
         roomResult.setCode(1);
         roomResult.setMessage("创建直播间成功");
         roomResult.setRoomId(room.getRoomId());
+
+
+
+        RoomUser roomUser = new RoomUser();
+        roomUser.setUserId(Long.parseLong(userId));
+        roomUser.setRoomId(room.getRoomId());
+        roomUserService.save(roomUser);
+
+
         return R.success(roomResult);
+    }
+
+
+    @PostMapping("/joinRoom")
+    public R<String> joinRoom(Long roomId, HttpServletRequest request){
+        RoomUser roomUser = new RoomUser();
+        String userId = request.getHeader("userId");
+
+        roomUser.setUserId(Long.parseLong(userId));
+        roomUser.setRoomId(roomId);
+        roomUserService.save(roomUser);
+        return R.success("");
+    }
+
+
+    @GetMapping("/getRoomPersons")
+    public R<List<RoomUser>> getRoomPersons(Long roomId, HttpServletRequest request){
+
+        String userId = request.getHeader("userId");
+        LambdaQueryWrapper<RoomUser> roomUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roomUserLambdaQueryWrapper.eq(RoomUser::getRoomId,roomId);
+        roomUserLambdaQueryWrapper.notIn(RoomUser::getUserId,userId);
+        List<RoomUser> list = roomUserService.list(roomUserLambdaQueryWrapper);
+
+        return R.success(list);
+    }
+
+
+
+    @GetMapping("/getLiveroomByUserId")
+    public R<List<Room>> getLiveroomByUserId(HttpServletRequest request){
+        String userId = request.getHeader("userId");
+        LambdaQueryWrapper<RoomUser>wrapper=new LambdaQueryWrapper<>();
+        wrapper.eq(userId!=null,RoomUser::getUserId,Long.parseLong(userId));
+        //安装创建时间降序排列
+        List<RoomUser> list = roomUserService.list(wrapper);
+
+
+        ArrayList<Room> rooms = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            LambdaQueryWrapper<Room> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Room::getRoomId,list.get(i).getRoomId());
+            Room one = roomService.getOne(queryWrapper);
+            rooms.add(one);
+        }
+        return R.success(rooms);
     }
 
     /**

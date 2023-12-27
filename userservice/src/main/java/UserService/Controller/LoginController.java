@@ -3,6 +3,7 @@ package UserService.Controller;
 import UserService.Common.R;
 import UserService.Domain.StreamResult;
 import UserService.Domain.User;
+import UserService.Domain.UserIdResult;
 import UserService.Domain.UserPlan;
 import UserService.Service.UserPlanService;
 import UserService.Service.UserService;
@@ -60,7 +61,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("/login")
-    public R<String> login(@RequestBody User user, HttpServletResponse response) throws UnsupportedEncodingException {
+    public R<UserIdResult> login(@RequestBody User user, HttpServletResponse response) throws UnsupportedEncodingException {
         //查询数据库，获取用户信息
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(user.getUserName() != null, User::getUserName, user.getUserName());
@@ -97,8 +98,11 @@ public class LoginController {
             response.addCookie(cookie);
             response.addCookie(cookie1);
         }
+        UserIdResult userIdResult = new UserIdResult();
+        userIdResult.setUserId(one.getUserId());
+        userIdResult.setToken(token);
 
-        return R.success(token);
+        return R.success(userIdResult);
     }
 
     /**

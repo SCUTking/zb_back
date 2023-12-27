@@ -29,7 +29,7 @@ spring:
         max-wait: 1ms #数据库最大阻塞时间
   #配置rabbitmq
   rabbitmq:
-    addresses: 121.37.24.27
+    addresses: 139.159.136.22
     username: yue
     password: yue
     virtual-host: /

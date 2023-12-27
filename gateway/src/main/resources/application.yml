@@ -46,7 +46,7 @@ spring:
 
   datasource: #配置数据库
     druid:
-      url: jdbc:mysql://localhost/zhibo
+      url: jdbc:mysql://localhost:3306/zhibo
       driver-class-name: com.mysql.cj.jdbc.Driver
       username: root
       password: 852456jkl

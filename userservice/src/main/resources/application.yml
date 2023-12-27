@@ -29,11 +29,10 @@ spring:
         max-wait: 1ms #数据库最大阻塞时间
  #配置rabbitmq
   rabbitmq:
+    addresses: 139.159.136.22
     username: yue
     password: yue
-    addresses: 121.37.24.27
-    port: 5672
-    virtual-host: / #虚拟主机
+    virtual-host: /
 #配置mybatisPlus
 mybatis-plus:
   configuration:
